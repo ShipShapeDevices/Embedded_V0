@@ -6,30 +6,7 @@
 #include "DHT.h"
 #include "BMA250.h" //accel
 
-//sed up for BLE
-#define CODEBENDER true
 
-//#if defined(ARDUINO_ARCH_SAMD)
-//  #define SerialMonitorInterface SerialUSB
-//#else
-//  #define SerialMonitorInterface Serial
-//#endif
-
-#define BLE_DEBUG true
-#define SerialMonitorInterface Serial
-#include <SPI.h>
-#include "lib_aci.h"
-#include "aci_setup.h"
-#include "uart_over_ble.h"
-#include "services.h"
-
-uint8_t ble_rx_buffer[21];
-uint8_t ble_rx_buffer_len = 0;
-uint8_t ble_connection_state = false;
-
-#if CODEBENDER
-#include "UART.h"
-#endif
 
 
 BMA250 accel;
@@ -103,9 +80,7 @@ void setup(void)
 
   pinMode(chipSelect, OUTPUT);
 
-  //set up BLE
-  Serial.println(F("Initializing BLE card..."));
-  BLEsetup();
+
 
     // initialize the SD card
   Serial.print(F("Initializing SD card..."));
@@ -259,7 +234,7 @@ void LogData()
   //log new line
   logfile.println();
 #if ECHO_TO_SERIAL
-  Serial.println(F(" data"));
+  Serial.println(" ");
 #endif // ECHO_TO_SERIAL
 
 
