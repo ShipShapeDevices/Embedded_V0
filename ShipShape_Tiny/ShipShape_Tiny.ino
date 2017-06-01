@@ -26,9 +26,9 @@ uint32_t syncTime = 0; // time of last sync()
 #define WAIT_TO_START    0 // Wait for serial input in setup()
 
 //Pin defs 
-#define DHTPIN 3     // what digital pin we're connected to for DHT
+#define DHTPIN D9     // what digital pin we're connected to for DHT
 // for the data logging shield, we use digital pin 10 for the SD cs line
-#define chipSelect 10
+#define chipSelect D8
 
 
 // humidity 
@@ -67,7 +67,7 @@ void setup(void)
   Serial.println(F(""));
   Serial.println(F("Starting"));
 
-  
+
   
 #if WAIT_TO_START
   Serial.println(F("Type any character to start");
@@ -86,14 +86,14 @@ void setup(void)
   Serial.print(F("Initializing SD card..."));
   
   // see if the card is present and can be initialized:
-  if (!SD.begin(SPI_HALF_SPEED, chipSelect)) {
+  if (!SD.begin( chipSelect)) {
     error("Card failed, or not present");
   }
   Serial.println(F("card initialized."));
 
-  // initialize the DHT for humidity
-  Serial.println(F("Initializing DHT22 card..."));
-  dht.begin();
+//  // initialize the DHT for humidity
+//  Serial.println(F("Initializing DHT22 card..."));
+//  dht.begin();
   
 
   
@@ -117,24 +117,26 @@ void setup(void)
 
 
 
- 
-  CreateFile();
+ myFilename = "LOGGER21.CSV";
+  //CreateFile();
 }
 
 void loop(void)
 {
 
-    Serial.println(F("Ready"));
-    syncTime = millis();
+//    Serial.println(F("Ready"));
+//    syncTime = millis();
+//
+//
+//    LogData();
+// 
+// 
+//    ReadLogFile(myFilename);
+//    while(true){
+//
+//    }
 
-
-    LogData();
- 
- 
     ReadLogFile(myFilename);
-    while(true){
-
-    }
 
   
 }//end loop
@@ -193,26 +195,26 @@ void LogData()
 ////  Serial.print(F('"'));
 //#endif //ECHO_TO_SERIAL
 
-//  // Reading temperature or humidity takes about 250 milliseconds!
-//  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-//  float humidity = dht.readHumidity();
-//  // Read temperature as Fahrenheit (isFahrenheit = true)
-//  float temperatureF = dht.readTemperature(true);
-//
-//  // Check if any reads failed and exit early (to try again).
-//  if (isnan(humidity) || isnan(temperatureF)) {
-//    Serial.println(F("Failed to read from DHT sensor! "));
-//    //return;
-//  }
+  // Reading temperature or humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  float humidity = dht.readHumidity();
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  float temperatureF = dht.readTemperature(true);
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(humidity) || isnan(temperatureF)) {
+    Serial.println(F("Failed to read from DHT sensor! "));
+    //return;
+  }
 
   accel.read();//This function gets new data from the accelerometer
    
-  logfile.print("0.5");
+  logfile.print(humidity);
   logfile.print(", ");    
   logfile.print((accel.rawTemp*0.5)+24.0,1);
 #if ECHO_TO_SERIAL
    
-  Serial.print("0.5");
+  Serial.print(humidity);
   Serial.print(F(", "));    
   Serial.print((accel.rawTemp*0.5)+24.0,1);
 #endif //ECHO_TO_SERIAL
