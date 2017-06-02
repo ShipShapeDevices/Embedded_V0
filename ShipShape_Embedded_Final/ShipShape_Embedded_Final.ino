@@ -71,7 +71,7 @@ void error(char *str)
 
 void setup(void)
 {
-  Serial.begin(230400);
+  Serial.begin(115200);
   Serial.println(F(""));
   Serial.println(F("Starting"));
      // initialize the DHT for humidity
@@ -192,7 +192,7 @@ void LogData(void)
     ////  Serial.print(F(":"));
     ////  Serial.print(F(now.minute(), DEC));
     ////  Serial.print(F(":"));
-    ////  Serial.print(F(now.second(), DEC));
+    ////  Serial.print(F(now.second(), DEC)e);
     ////  Serial.print(F('"'));
     //#endif //ECHO_TO_SERIAL
 
@@ -361,7 +361,7 @@ void loop(void)
        CreateFile();
         syncTime = millis();
       //end connection
-          String data = "end";
+          String data = "logging";
           client.println(data);
           Serial.println(data);
       currentState = SETUP;
