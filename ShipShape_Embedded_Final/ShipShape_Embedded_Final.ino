@@ -40,7 +40,7 @@ uint32_t syncTime = 0; // time of last sync()
 // humidity
 #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 // Initialize DHT sensor.
-DHT dht(DHTPIN, DHTTYPE,11);
+DHT dht(DHTPIN, DHTTYPE, 11);
 
 
 
@@ -49,7 +49,7 @@ WiFiClient client;
 String packageID;
 
 
-typedef enum {LOGGING, READING, WAITING,SETUP} states;
+typedef enum {LOGGING, READING, WAITING, SETUP} states;
 states currentState;
 
 
@@ -74,9 +74,9 @@ void setup(void)
   Serial.begin(115200);
   Serial.println(F(""));
   Serial.println(F("Starting"));
-     // initialize the DHT for humidity
-    Serial.println(F("Initializing DHT22 card..."));
-    dht.begin();
+  // initialize the DHT for humidity
+  Serial.println(F("Initializing DHT22 card..."));
+  dht.begin();
 
   //WIFI
   Serial.print("Configuring access point...");
@@ -112,7 +112,7 @@ void setup(void)
     }
   Serial.println(F("card initialized."));
 
- 
+
 
 
 
@@ -137,12 +137,12 @@ void setup(void)
 
 
   //myFilename = "LOGGER21.CSV";
-currentState = WAITING;
+  currentState = WAITING;
 }
 
 void LogData(void)
 {
-  
+
 
   while ( !client  ) {
     //check for client
@@ -160,41 +160,6 @@ void LogData(void)
     Serial.print(F(", "));
 #endif
 
-    //  // fetch the time
-    //  DateTime now  = RTC.now();
-    //  // log time
-    //  logfile.print(now.unixtime()); // seconds since 1/1/1970
-    //  logfile.print(", ");
-    //  logfile.print('"');
-    //  logfile.print(now.year(), DEC);
-    //  logfile.print("/");
-    //  logfile.print(now.month(), DEC);
-    //  logfile.print("/");
-    //  logfile.print(now.day(), DEC);
-    //  logfile.print(" ");
-    //  logfile.print(now.hour(), DEC);
-    //  logfile.print(":");
-    //  logfile.print(now.minute(), DEC);
-    //  logfile.print(":");
-    //  logfile.print(now.second(), DEC);
-    //  logfile.print('"');
-    //#if ECHO_TO_SERIAL
-    ////  Serial.print(F(now.unixtime()); // seconds since 1/1/1970
-    ////  Serial.print(F(", "));
-    ////  Serial.print(F('"'));
-    ////  Serial.print(F(now.year(), DEC));
-    ////  Serial.print(F("/"));
-    ////  Serial.print(F(now.month(), DEC));
-    ////  Serial.print(F("/"));
-    ////  Serial.print(F(now.day(), DEC));
-    ////  Serial.print(F(" "));
-    ////  Serial.print(F(now.hour(), DEC));
-    ////  Serial.print(F(":"));
-    ////  Serial.print(F(now.minute(), DEC));
-    ////  Serial.print(F(":"));
-    ////  Serial.print(F(now.second(), DEC)e);
-    ////  Serial.print(F('"'));
-    //#endif //ECHO_TO_SERIAL
 
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
@@ -250,7 +215,7 @@ void LogData(void)
       // we are syncing data to the card & updating FAT!
       logfile.flush();
       Serial.println(F("Saved to SD "));
-        Serial.println(millis());
+      Serial.println(millis());
     }
 
   }
@@ -290,44 +255,44 @@ void CreateFile(void) {
   logfile.println("start");
 
 #if ECHO_TO_SERIAL
-Serial.println(F("packageID"));
+  Serial.println(F("packageID"));
   Serial.println(packageID);
   Serial.println(F("millis,humidity,tempF,accel"));
-    Serial.println(F("start"));
+  Serial.println(F("start"));
 
 #endif //ECHO_TO_SERIAL
 
 }
- void ReadLogFile(String filename) {
+void ReadLogFile(String filename) {
 
-   client.setNoDelay(1);
+  client.setNoDelay(1);
   // re-open the file for reading:
   logfile = SD.open(filename);
-                    
+
   Serial.println(millis());
 
   if (logfile) {
-      int bufferSize =  1760;
-      byte clientBuf[bufferSize ];
-      int clientCount = 0;  
+    int bufferSize =  1760;
+    byte clientBuf[bufferSize ];
+    int clientCount = 0;
     // read from the file until there's nothing else in it:
     while (logfile.available()) {
-        clientBuf[clientCount] = logfile.read();
-        clientCount++;
-        if(clientCount > bufferSize -1)
-                {
-                  client.write(clientBuf,bufferSize );
-                  clientCount = 0;
-                  //Serial.println("buff");
-                }  
+      clientBuf[clientCount] = logfile.read();
+      clientCount++;
+      if (clientCount > bufferSize - 1)
+      {
+        client.write(clientBuf, bufferSize );
+        clientCount = 0;
+        //Serial.println("buff");
+      }
       //int data = logfile.read();
-     // client.write(logfile.read());
+      // client.write(logfile.read());
       //Serial.write(data);
-    
+
     }
-    if(clientCount > 0) client.write(clientBuf,clientCount);   
-      Serial.println("done");
-      Serial.println(millis());
+    if (clientCount > 0) client.write(clientBuf, clientCount);
+    Serial.println("done");
+    Serial.println(millis());
 
     // close the file:
     logfile.close();
@@ -343,140 +308,82 @@ Serial.println(F("packageID"));
 
 void loop(void)
 {
-   //switch on current states
+  //switch on current states
   switch (currentState) {
-    case WAITING:{
-     //wait for connection to log return if none
-    client = server.available();
-    if (!client) {
-      return;// do nothin
-    }
-    else {
-      Serial.println("connected to Wifi");
-       
-      //get data from browser
-      packageID = client.readStringUntil('\r');
-      //print
-      Serial.println(packageID);
-       CreateFile();
-        syncTime = millis();
-      //end connection
+    case WAITING: {
+        //wait for connection to log return if none
+        client = server.available();
+        if (!client) {
+          return;// do nothin
+        }
+        else {
+          Serial.println("connected to Wifi");
+
+          //get data from browser
+          packageID = client.readStringUntil('\r');
+          //print
+          Serial.println(packageID);
+          CreateFile();
+          syncTime = millis();
+          //end connection
           String data = "logging";
           client.println(data);
           Serial.println(data);
-      currentState = SETUP;
-          
-    }
-    
-    }
+          currentState = SETUP;
+
+        }
+
+      }
       break;
 
     case LOGGING:
-{
+      {
         //get data from browser
-      String request = client.readStringUntil('\r');
-      //print
-      Serial.println(request);
-      // on connect 
-      currentState  = READING;
-}
+        String request = client.readStringUntil('\r');
+        //print
+        Serial.println(request);
+        // on connect
+        currentState  = READING;
+      }
       break;
-    case SETUP:{
-      //wait for disconnenct
-       client = server.available();
-       if ( client  ) {
-      //do nothing
-       
-        }else{
-         Serial.println("Start Logging");
+    case SETUP: {
+        //wait for disconnenct
+        client = server.available();
+        if ( client  ) {
+          //do nothing
 
-        // start loging
-        LogData();
-        currentState  = LOGGING;
+        } else {
+          Serial.println("Start Logging");
+
+          // start loging
+          LogData();
+          currentState  = LOGGING;
         }
 
-    }
-      break;
-    case READING:{
-
-
-      ReadLogFile(myFilename);
-      //end connection
-      String data = "end";
-      client.println(data);
-      Serial.println(data);
- Serial.println("Waiting");
-          //wait for disconnenct
-      while ( client  ) {
-    //check for client
-    client = server.available();
       }
-       Serial.println("Disconnected");
-         currentState  = WAITING;
+      break;
+    case READING: {
 
-    }
+
+        ReadLogFile(myFilename);
+        //end connection
+        String data = "end";
+        client.println(data);
+        Serial.println(data);
+        Serial.println("Waiting");
+        //wait for disconnenct
+        while ( client  ) {
+          //check for client
+          client = server.available();
+        }
+        Serial.println("Disconnected");
+        currentState  = WAITING;
+
+      }
       break;
 
 
   }
-//  //Serial.println(F("Ready"));
-//  syncTime = millis();
-//
-//  //wait for connection to log return if none
-//    client = server.available();
-//    if (!client) {
-//      return;// do nothin
-//    }
-//    else {
-//      Serial.println("connected to Wifi");
-//        CreateFile();
-//
-//      //get data from browser
-//      String request = client.readStringUntil('\r');
-//      //print
-//      Serial.println(request);
-//      //end connection
-//          String data = "end";
-//          client.println(data);
-//          Serial.println(data);
-//
-//          
-//    }
-//    //wait for disconnenct
-//      while ( client  ) {
-//    //check for client
-//    client = server.available();
-//      }
-//   Serial.println("Start Logging");
-//
-//  // start loging
-//  LogData();
-//
-//    //get data from browser
-//      String request = client.readStringUntil('\r');
-//      //print
-//      Serial.println(request);
-//      ReadLogFile(myFilename);
-//      //end connection
-//      String data = "end";
-//      client.println(data);
-//      Serial.println(data);
-// Serial.println("Waiting");
-//          //wait for disconnenct
-//      while ( client  ) {
-//    //check for client
-//    client = server.available();
-//      }
-//       Serial.println("Disconnected");
-  
-
-
-
-
-  
-
-  
-
 
 
 
