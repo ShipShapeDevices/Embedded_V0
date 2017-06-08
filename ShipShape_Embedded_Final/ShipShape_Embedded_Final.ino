@@ -1,64 +1,48 @@
-
-
 #include <SPI.h>
 #include <SD.h>
 #include <Wire.h>
 #include "DHT.h"
 #include "BMA250.h" //accel
-
 #include <ESP8266WiFi.h>
 
 
 /* Set these to your desired credentials. */
 const char *ssid = "ShipShapeWIFI";
 
+//set up server port
 WiFiServer server(80);
+WiFiClient client;
 
-
-BMA250 accel;
-// A simple data logger for the Arduino analog pins
 
 // how many milliseconds between grabbing data and logging it. 1000 ms is once a second
 #define LOG_INTERVAL  100 // mills between entries (reduce to take more/faster data)
 
 // how many milliseconds before writing the logged data permanently to disk
-// set it to the LOG_INTERVAL to write each time (safest)
-// set it to 10*LOG_INTERVAL to write all data every 10 datareads, you could lose up to
-// the last 10 reads if power is lost but it uses less power and is much faster!
-#define SYNC_INTERVAL 20000 // mills between calls to flush() - to write data to the card
+#define SYNC_INTERVAL 10*LOG_INTERVAL // mills between calls to flush() - to write data to the card
 uint32_t syncTime = 0; // time of last sync()
 
 #define ECHO_TO_SERIAL   0 // echo data to serial port
 #define WAIT_TO_START    0 // Wait for serial input in setup()
 
 //Pin defs
-#define DHTPIN D3     // what digital pin we're connected to for DHT
-// for the data logging shield, we use digital pin 10 for the SD cs line
-#define chipSelect D8
+#define DHTPIN D3 // what digital pin we're connected to for DHT
+#define chipSelect D8 // for the data logging shield, we use digital pin 10 for the SD cs line
+#define DHTTYPE DHT22  // humidity = DHT 22  (AM2302), AM2321
 
+//accel
+BMA250 accel;
 
-// humidity
-#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 // Initialize DHT sensor.
 DHT dht(DHTPIN, DHTTYPE, 11);
 
-
-
-WiFiClient client;
-
-String packageID;
-
-
-typedef enum {LOGGING, READING, WAITING, SETUP} states;
-states currentState;
-
-
-
-
+//SD Logging
 File logfile;
 
+String packageID;
+typedef enum {LOGGING, READING, WAITING, SETUP} states;
+states currentState;
 String myFilename;
-float accelScale = 12.4; //31.5
+float accelScale = 12.4; 
 bool startLOG = false;
 
 void error(char *str)
@@ -80,10 +64,10 @@ void setup(void)
 
   //WIFI
   Serial.print("Configuring access point...");
-  /* You can remove the password parameter if you want the AP to be open. */
   WiFi.mode(WIFI_AP);
+  //set wifi with no password
   WiFi.softAP(ssid);
-
+  //start soft AP server
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
@@ -111,45 +95,24 @@ void setup(void)
     error("Card failed, or not present");
     }
   Serial.println(F("card initialized."));
-
-
-
-
-
-  //options accel
-  ////  #define BMA250_I2CADDR 0x18
-  ////#define BMA250_update_time_64ms 0x08
-  ////#define BMA250_update_time_32ms 0x09
-  ////#define BMA250_update_time_16ms 0x0A
-  ////#define BMA250_update_time_8ms 0x0B
-  ////#define BMA250_update_time_4ms 0x0C
-  ////#define BMA250_update_time_2ms 0x0D
-  ////#define BMA250_update_time_1ms 0x0E
-  ////#define BMA250_update_time_05ms 0xF
-  ////#define BMA250_range_2g 0x03
-  ////#define BMA250_range_4g 0x05
-  ////#define BMA250_range_8g 0x08
-  ////#define BMA250_range_16g 0x0C
+  
+  //accel
   Serial.println(F("Initializing BMA250 Accel card..."));
   Wire.begin();
   accel.begin(BMA250_range_4g, BMA250_update_time_32ms);//This sets up the BMA250 accelerometer
-
-
-
-  //myFilename = "LOGGER21.CSV";
+  //set start state to waiting
   currentState = WAITING;
 }
 
 void LogData(void)
 {
 
-
+  //will not connected to wifi
   while ( !client  ) {
     //check for client
     client = server.available();
     // delay for the amount of time we want between readings
     delay((LOG_INTERVAL - 1) - (millis() % LOG_INTERVAL));
-
 
     // log milliseconds since starting
     uint32_t m = millis();
@@ -174,7 +137,7 @@ void LogData(void)
     }
 
     accel.read();//This function gets new data from the accelerometer
-
+  
     logfile.print(humidity);
     logfile.print(", ");
     logfile.print(temperatureF);//(accel.rawTemp * 0.5) + 24.0, 1);
@@ -188,21 +151,17 @@ void LogData(void)
     float accelData;
     accelData =  sqrt(sq(accel.X / accelScale) + sq(accel.Y / accelScale) + sq(accel.Z / accelScale));
 
-
     logfile.print(", ");
     logfile.print(accelData);
 #if ECHO_TO_SERIAL
     Serial.print(F(", "));
     Serial.print(accelData);
 #endif //ECHO_TO_SERIAL
-
     //log new line
     logfile.println();
 #if ECHO_TO_SERIAL
     Serial.println(" ");
 #endif // ECHO_TO_SERIAL
-
-
     // Now we write data to disk! Don't sync too often - requires 2048 bytes of I/O to SD card
     // which uses a bunch of power and takes time
     if ((millis() - syncTime) < SYNC_INTERVAL) {
@@ -210,8 +169,6 @@ void LogData(void)
     }
     else {
       syncTime = millis();
-
-
       // we are syncing data to the card & updating FAT!
       logfile.flush();
       Serial.println(F("Saved to SD "));
@@ -310,6 +267,7 @@ void loop(void)
 {
   //switch on current states
   switch (currentState) {
+    
     case WAITING: {
         //wait for connection to log return if none
         client = server.available();
@@ -346,6 +304,7 @@ void loop(void)
         currentState  = READING;
       }
       break;
+      
     case SETUP: {
         //wait for disconnenct
         client = server.available();
@@ -354,7 +313,6 @@ void loop(void)
 
         } else {
           Serial.println("Start Logging");
-
           // start loging
           LogData();
           currentState  = LOGGING;
@@ -362,9 +320,8 @@ void loop(void)
 
       }
       break;
+      
     case READING: {
-
-
         ReadLogFile(myFilename);
         //end connection
         String data = "end";
@@ -381,8 +338,6 @@ void loop(void)
 
       }
       break;
-
-
   }
 
 
